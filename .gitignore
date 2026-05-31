@@ -1,0 +1,151 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pot
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secret*.txt
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+petase_results.db
+aether.db
+
+# Large model files
+*.bin
+*.pt
+*.pth
+models/facebook/
+models/*/
+huggingface_cache/
+.cache/
+
+# IPFS and blockchain temp files
+ipfs_temp/
+stellar_temp/
+*.ipfs
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+scratch/
+
+# OS files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+logs/
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Data files (large, regenerate)
+ai_ml/data/raw/large_*.csv
+ai_ml/data/raw/*.fasta.bak
+*.bak
+
+# Demo outputs
+demo_output/
+output/
+results/
+
+# Node modules if you add frontend later
+node_modules/
+npm-debug.log
+
+# Package manager
+poetry.lock
+Pipfile.lock
+
+# IDE-specific
+.pytype/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# macOS
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Desktop.ini
+
+# Heavy Binaries & Compressed Archives
+*.zip
+*.tar.gz
+*.tgz
+*.gz
+*.rar
+
+# Raw ProteinGym databases and tokenized files
+**/proteingym_dms.csv/**
+**/proteingym_dms.csv
+ai_ml/data/processed/tokenized_sequences.pt
