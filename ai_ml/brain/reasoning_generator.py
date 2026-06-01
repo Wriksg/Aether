@@ -1,240 +1,5 @@
 import math
-import os
-import sys
 from typing import Dict, List
-
-# --- DYNAMIC PATH RESOLUTION ---
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-# --- Mutation-specific reasoning library ---
-# Keyed by the new amino acid (what it mutates TO).
-# Each entry has: mechanism, structural effect, risk profile.
-AMINO_ACID_PROFILES = {
-    # Charged / polar — electrostatic and H-bond effects
-    "D": {
-        "charge": "negative",
-        "mechanism": "introduces a negatively charged aspartate residue",
-        "effect": "creates new electrostatic interactions that stabilize substrate orientation in the binding cleft",
-        "risk": "May alter local pH sensitivity near the active site.",
-    },
-    "E": {
-        "charge": "negative",
-        "mechanism": "substitutes a longer-chain glutamate at this position",
-        "effect": "extends electrostatic reach into the PET substrate channel, improving ester bond polarization",
-        "risk": "Potential charge repulsion with neighboring acidic residues.",
-    },
-    "K": {
-        "charge": "positive",
-        "mechanism": "introduces a positively charged lysine",
-        "effect": "forms new salt bridges that lock the binding pocket into a higher-activity conformation",
-        "risk": "May reduce solubility at high temperatures.",
-    },
-    "R": {
-        "charge": "positive",
-        "mechanism": "places a bulky arginine at this position",
-        "effect": "creates a guanidinium group capable of bidentate hydrogen bonding with the PET carbonyl",
-        "risk": "Steric bulk may restrict substrate entry at lower temperatures.",
-    },
-    "S": {
-        "charge": "polar",
-        "mechanism": "introduces a small polar serine hydroxyl",
-        "effect": "adds a hydrogen bond donor that pre-positions the scissile ester bond for nucleophilic attack",
-        "risk": "Hydroxyl may compete with catalytic water in the active site.",
-    },
-    "T": {
-        "charge": "polar",
-        "mechanism": "places a threonine hydroxyl-methyl group at this position",
-        "effect": "creates a dual hydrogen bond donor-acceptor stabilizing the tetrahedral intermediate",
-        "risk": "Requires in-vitro verification of hydrogen bond geometry.",
-    },
-    "N": {
-        "charge": "polar",
-        "mechanism": "substitutes asparagine at this position",
-        "effect": "introduces an amide side chain that hydrogen-bonds to the PET backbone, improving substrate alignment",
-        "risk": "Asparagine is prone to deamidation under acidic conditions.",
-    },
-    "Q": {
-        "charge": "polar",
-        "mechanism": "introduces glutamine at this position",
-        "effect": "extends the hydrogen bonding network into the substrate-binding groove, improving turnover rate",
-        "risk": "Moderate deamidation risk at elevated temperatures.",
-    },
-    # Glycine — flexibility
-    "G": {
-        "charge": "nonpolar",
-        "mechanism": "removes the side chain entirely via glycine substitution",
-        "effect": "introduces backbone flexibility at this position, allowing the binding pocket to adopt a wider-open conformation for PET entry",
-        "risk": "Moderate risk of thermal instability due to increased backbone entropy.",
-    },
-    # Aromatic / bulky — steric and pi-stacking effects
-    "F": {
-        "charge": "nonpolar",
-        "mechanism": "introduces a bulky phenylalanine ring at this position",
-        "effect": "creates a hydrophobic pi-stacking platform that anchors the PET aromatic ring, increasing substrate residence time",
-        "risk": "Steric bulk may slow product release. Requires thermal stability check.",
-    },
-    "W": {
-        "charge": "nonpolar",
-        "mechanism": "substitutes tryptophan, the largest aromatic residue",
-        "effect": "forms a deep hydrophobic cradle around the PET terephthalate ring, dramatically improving substrate binding affinity",
-        "risk": "Tryptophan bulk can restrict loop mobility. Monitor for reduced kcat.",
-    },
-    "Y": {
-        "charge": "polar",
-        "mechanism": "places a tyrosine hydroxyl-aromatic group at this position",
-        "effect": "combines aromatic stacking with hydrogen bonding, creating a dual-mode substrate anchor",
-        "risk": "Tyrosine phosphorylation susceptibility in expression hosts.",
-    },
-    "H": {
-        "charge": "polar",
-        "mechanism": "introduces histidine, which can act as a proton shuttle",
-        "effect": "positions an imidazole ring capable of general acid-base catalysis at this position, accelerating hydrolysis",
-        "risk": "Activity is pH-sensitive around pKa 6.0. Moderate thermal instability risk.",
-    },
-    # Small / aliphatic — shape and packing effects
-    "A": {
-        "charge": "nonpolar",
-        "mechanism": "reduces side chain to a minimal methyl group via alanine substitution",
-        "effect": "relieves steric clash at this position, opening a tighter fit for the PET substrate",
-        "risk": "Reduced hydrophobic packing may lower melting temperature slightly.",
-    },
-    "V": {
-        "charge": "nonpolar",
-        "mechanism": "places a branched valine at this position",
-        "effect": "adds a compact hydrophobic wedge that tightens packing around the active site without blocking substrate access",
-        "risk": "Branched chain may restrict adjacent loop movement.",
-    },
-    "L": {
-        "charge": "nonpolar",
-        "mechanism": "substitutes leucine, a larger branched aliphatic",
-        "effect": "strengthens hydrophobic core packing near the active site, improving thermal resilience",
-        "risk": "May shift optimal temperature window upward.",
-    },
-    "I": {
-        "charge": "nonpolar",
-        "mechanism": "introduces isoleucine at this position",
-        "effect": "fills a hydrophobic cavity with a beta-branched side chain, increasing structural rigidity around the binding cleft",
-        "risk": "Rigidity gains may reduce conformational sampling needed for catalysis.",
-    },
-    "M": {
-        "charge": "nonpolar",
-        "mechanism": "places a flexible sulfur-containing methionine at this position",
-        "effect": "adds van der Waals contacts with the PET substrate while maintaining backbone flexibility",
-        "risk": "Methionine is susceptible to oxidation under aerobic conditions.",
-    },
-    "P": {
-        "charge": "nonpolar",
-        "mechanism": "introduces a proline ring constraint at this position",
-        "effect": "rigidifies the local backbone into a fixed conformation that pre-organizes the active site for catalysis",
-        "risk": "High risk of disrupting adjacent secondary structure. Verify folding.",
-    },
-    "C": {
-        "charge": "polar",
-        "mechanism": "introduces a cysteine thiol at this position",
-        "effect": "creates a potential disulfide bridge or metal coordination site that stabilizes the active conformation",
-        "risk": "Disulfide formation is context-dependent. Oxidation state must be controlled.",
-    },
-}
-
-# Position-context descriptions for known functional regions
-# Based on typical PETase active site topology
-POSITION_CONTEXT = {
-    range(1, 10): "in the N-terminal signal region",
-    range(10, 20): "adjacent to the substrate-binding groove",
-    range(20, 30): "within the catalytic cleft entrance",
-    range(30, 50): "in a loop region flanking the active site",
-    range(50, 100): "in the core beta-sheet scaffold",
-    range(100, 200): "near the oxyanion hole stabilization region",
-    range(200, 300): "in the lid domain controlling substrate access",
-}
-
-
-def _get_position_context(pos: int) -> str:
-    for pos_range, description in POSITION_CONTEXT.items():
-        if pos in pos_range:
-            return description
-    return "at a structurally significant position"
-
-
-def _build_reasoning(mutations: List[str], rate_vs_wt: float) -> str:
-    """
-    Builds a mutation-specific reasoning string.
-    Handles single mutations, multi-mutation combos, and unknown amino acids.
-    """
-    if not mutations:
-        return "This is the wild-type baseline sequence. No mutations applied."
-
-    parts = []
-    for mut in mutations:
-        if len(mut) < 3:
-            parts.append(f"Mutation {mut} modifies a structurally significant position.")
-            continue
-
-        original_aa = mut[0]
-        new_aa = mut[-1]
-        try:
-            pos = int(mut[1:-1])
-        except ValueError:
-            pos = 0
-
-        pos_context = _get_position_context(pos)
-        profile = AMINO_ACID_PROFILES.get(new_aa)
-
-        if profile:
-            parts.append(
-                f"{mut}: This substitution {profile['mechanism']} {pos_context}. "
-                f"It {profile['effect']}."
-            )
-        else:
-            parts.append(
-                f"{mut}: Substitution at position {pos} {pos_context} "
-                f"modifies local side-chain geometry to improve substrate alignment."
-            )
-
-    reasoning_body = " | ".join(parts)
-    closing = (
-        f"Combined, these changes are predicted to accelerate PET hydrolysis "
-        f"by {rate_vs_wt}x over wild-type."
-    )
-    return f"{reasoning_body} {closing}"
-
-
-def _build_risk_flag(mutations: List[str], rate_vs_wt: float, delta_score: float) -> str | None:
-    """
-    Generates a mutation-aware risk flag.
-    Returns None for candidates with no glycine insertions and stable delta scores.
-    """
-    if not mutations:
-        return None
-
-    # Check for glycine insertions (which disrupt folding stability)
-    has_glycine_insertion = any(mut.endswith("G") for mut in mutations)
-
-    # A candidate is stable if its delta fitness score is above the threshold (>= -0.10)
-    is_thermally_stable = delta_score >= -0.10
-
-    # If the candidate has no glycine insertions and is stable, clear the risk flag entirely
-    if not has_glycine_insertion and is_thermally_stable:
-        return None
-
-    # Collect specific risks from profiles
-    specific_risks = []
-    for mut in mutations:
-        if len(mut) >= 3:
-            new_aa = mut[-1]
-            profile = AMINO_ACID_PROFILES.get(new_aa)
-            if profile and profile.get("risk"):
-                specific_risks.append(profile["risk"])
-
-    if specific_risks:
-        return specific_risks[0]
-
-    if rate_vs_wt < 5.0:
-        return "Low predicted improvement margin. Prioritize for early experimental triage."
-
-    return "Requires in-vitro verification."
 
 
 class ReasoningGenerator:
@@ -242,41 +7,193 @@ class ReasoningGenerator:
         self.wild_type = wild_type
         self.causal_positions = causal_positions
 
+        # Detailed amino acid profiles for biochemically realistic reasoning cards
+        self.AMINO_ACID_PROFILES = {
+            "A": {
+                "mechanism": "places a small hydrophobic alanine",
+                "effect": "minimizes steric hindrance while maintaining a hydrophobic pocket contact",
+                "risk": None
+            },
+            "C": {
+                "mechanism": "places a cysteine",
+                "effect": "introduces potential for localized disulfide bond formation with nearby residues",
+                "risk": "Risk of forming aberrant disulfide bonds under non-reducing conditions."
+            },
+            "D": {
+                "mechanism": "introduces a negatively charged aspartate",
+                "effect": "creates new electrostatic interactions that stabilize substrate orientation in the binding cleft",
+                "risk": "May alter local pH sensitivity near the active site."
+            },
+            "E": {
+                "mechanism": "introduces a negatively charged glutamate",
+                "effect": "adds a flexible carboxylate chain that can participate in crucial hydrogen bonding or salt-bridge networks",
+                "risk": None
+            },
+            "F": {
+                "mechanism": "introduces a bulky aromatic phenylalanine",
+                "effect": "occupies empty hydrophobic pockets, restricting local conformational fluctuations",
+                "risk": "Slight risk of steric clashes if surrounding packing is tight."
+            },
+            "G": {
+                "mechanism": "removes the side chain entirely via glycine substitution",
+                "effect": "introduces backbone flexibility at this position, allowing the binding pocket to adopt a wider-open conformation for PET entry",
+                "risk": "Moderate risk of thermal instability due to increased backbone entropy."
+            },
+            "H": {
+                "mechanism": "places a histidine imidazole ring",
+                "effect": "acts as a potential proton transfer helper or a metal-coordination site to stabilize nearby transition states",
+                "risk": None
+            },
+            "I": {
+                "mechanism": "introduces isoleucine at this position",
+                "effect": "fills a hydrophobic cavity with a beta-branched side chain, increasing structural rigidity around the binding cleft",
+                "risk": None
+            },
+            "K": {
+                "mechanism": "introduces a flexible, positively charged lysine",
+                "effect": "creates electrostatic surface contacts to enhance solubility and prevent aggregation",
+                "risk": None
+            },
+            "L": {
+                "mechanism": "substitutes leucine, a larger branched aliphatic",
+                "effect": "strengthens hydrophobic core packing near the active site, improving thermal resilience",
+                "risk": None
+            },
+            "M": {
+                "mechanism": "places a flexible sulfur-containing methionine",
+                "effect": "adds van der Waals contacts with the PET substrate while maintaining backbone flexibility",
+                "risk": "Methionine is susceptible to oxidation under aerobic conditions."
+            },
+            "N": {
+                "mechanism": "introduces a polar amide side chain",
+                "effect": "adds a precise hydrogen bond donor-acceptor pair that coordinates with the water molecule network",
+                "risk": None
+            },
+            "P": {
+                "mechanism": "introduces a proline ring constraint",
+                "effect": "rigidifies the local backbone into a fixed conformation that pre-organizes the active site for catalysis",
+                "risk": "May shift optimal temperature window upward."
+            },
+            "Q": {
+                "mechanism": "places a polar glutamine side chain",
+                "effect": "extends a hydrogen-bonding network into the active site to stabilize catalytic intermediates",
+                "risk": None
+            },
+            "R": {
+                "mechanism": "places a positively charged arginine",
+                "effect": "constructs a stable bidentate salt-bridge network with neighboring acidic residues",
+                "risk": None
+            },
+            "S": {
+                "mechanism": "places a small polar serine hydroxyl",
+                "effect": "forms hydrogen bonds with the ester linkages of PET to pre-position the scissile bond",
+                "risk": None
+            },
+            "T": {
+                "mechanism": "places a threonine hydroxyl-methyl group",
+                "effect": "creates a dual hydrogen bond donor-acceptor stabilizing the tetrahedral intermediate",
+                "risk": "Requires in-vitro verification of hydrogen bond geometry."
+            },
+            "V": {
+                "mechanism": "places a branched valine",
+                "effect": "adds a compact hydrophobic wedge that tightens packing around the active site without blocking substrate access",
+                "risk": None
+            },
+            "W": {
+                "mechanism": "places a bulky aromatic tryptophan",
+                "effect": "creates favorable pi-stacking interactions with the aromatic terephthalate rings of PET",
+                "risk": "High risk of steric clashes if not accommodated by local structural relaxation."
+            },
+            "Y": {
+                "mechanism": "places a tyrosine phenolic hydroxyl",
+                "effect": "enables simultaneous pi-stacking and hydrogen-bonding to stabilize the binding of PET oligomers",
+                "risk": "May shift pH optimum slightly."
+            }
+        }
+
+        # Contextual mapping of physical positions to local functional regions
+        self.POSITION_CONTEXT = {
+            121: "near the oxyanion hole stabilization region",
+            159: "in the substrate-binding pocket",
+            186: "near the oxyanion hole stabilization region",
+            206: "in the lid domain controlling substrate access",
+            224: "in the lid domain controlling substrate access",
+            233: "in the lid domain controlling substrate access",
+            237: "in the lid domain controlling substrate access",
+            280: "in the lid domain controlling substrate access"
+        }
+
+    def _build_reasoning(self, mutations: List[str], final_rate: float) -> tuple[str, str]:
+        if not mutations:
+            return "This is the wild-type baseline sequence. No mutations applied.", None
+
+        sentences = []
+        highest_risk = None
+
+        for mut in mutations:
+            wt_aa = mut[0]
+            pos_str = "".join([char for char in mut if char.isdigit()])
+            pos = int(pos_str)
+            mut_aa = mut[-1]
+
+            profile = self.AMINO_ACID_PROFILES.get(mut_aa, {
+                "mechanism": f"substitutes {mut_aa}",
+                "effect": f"alters local properties at position {pos}",
+                "risk": None
+            })
+            context = self.POSITION_CONTEXT.get(pos, "near the active site cavity")
+
+            sentence = f"{mut}: This substitution {profile['mechanism']} {context}. It {profile['effect']}."
+            sentences.append(sentence)
+
+            if profile.get("risk") and not highest_risk:
+                highest_risk = profile["risk"]
+
+        combined_reasoning = " | ".join(sentences)
+        combined_reasoning += f" Combined, these changes are predicted to accelerate PET hydrolysis by {final_rate}x over wild-type."
+
+        return combined_reasoning, highest_risk
+
     def generate_cards(self, top_candidates: List[Dict]) -> List[Dict]:
         """
-        Analyzes top candidates, extracts exact biological mutations,
-        computes real fold improvement, and conditionalizes risk flags.
+        Analyzes the top candidates, extracts exact biological mutations,
+        and formats them into the final JSON response.
         """
         output = []
         for i, cand in enumerate(top_candidates):
             seq = cand["sequence"]
-            mutations = []
+            
+            # Trust mutations already extracted by inference_engine converter
+            mutations = cand.get("mutations", [])
+            
+            # Safety fallback: recompute from full sequence diff if empty
+            if not mutations and self.wild_type:
+                mutations = [
+                    f"{self.wild_type[j]}{j+1}{seq[j]}"
+                    for j in range(min(len(seq), len(self.wild_type)))
+                    if seq[j] != self.wild_type[j]
+                ]
 
-            # 1. Identify exactly which amino acids changed at causal positions
-            for pos in self.causal_positions:
-                if pos < len(seq) and pos < len(self.wild_type) and seq[pos] != self.wild_type[pos]:
-                    mutations.append(f"{self.wild_type[pos]}{pos}{seq[pos]}")
-
-            # 2. Extract delta score and compute real fold improvement
+            # Re-use the scientifically calibrated metrics from ranker
+            rate_vs_wt = cand.get("predicted_rate_vs_wildtype", 1.0)
+            confidence = cand.get("confidence", 0.5)
             delta_score = cand.get("score", 0.0)
 
-            # Apply the exact formula from ranker.py
-            rate_vs_wt = round(max(1.0, 1.0 + (delta_score * 15.0)), 1)
+            # Generate reasoning and risk flag dynamically
+            reasoning, risk = self._build_reasoning(mutations, rate_vs_wt)
+            
+            # Merge risk flags: prefer critical triad flags from the ranker, fallback to residue risks
+            final_risk = cand.get("risk_flag") if cand.get("risk_flag") else risk
 
-            # 3. Generate reasoning and risk flag conditionally
-            reasoning = _build_reasoning(mutations, rate_vs_wt)
-            risk_flag = _build_risk_flag(mutations, rate_vs_wt, delta_score)
-
-            # 4. Build the final formatted card
             card = {
                 "rank": i + 1,
                 "sequence": seq,
                 "score": delta_score,
                 "predicted_rate_vs_wildtype": rate_vs_wt,
-                "confidence": round(0.82 - (i * 0.03), 2),
+                "confidence": confidence,
                 "mutations": mutations,
                 "reasoning": reasoning,
-                "risk_flag": risk_flag
+                "risk_flag": final_risk
             }
             output.append(card)
 

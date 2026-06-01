@@ -80,54 +80,25 @@ class InferenceEngine:
         pso = PSOOptimizer(self.config, targets, **pso_kwargs)
         final_population = pso.optimize(wild_type_sequence)
 
-        # --- DIAGNOSTIC BLOCK START ---
-        print("\n" + "="*50)
-        print("          AETHER ENGINE DIAGNOSTIC LOG          ")
-        print("="*50)
-        print(f"DEBUG: wild_type_sequence length = {len(wild_type_sequence)}")
-        print(f"DEBUG: targets (causal positions) = {pso.ga_engine.target_positions}")
-        print(f"DEBUG: final_population size = {len(final_population)}")
-        print(f"DEBUG: final_population type = {type(final_population)}")
-        
-        if len(final_population) > 0:
-            print(f"DEBUG: first item type = {type(final_population[0])}")
-            print(f"DEBUG: first item = {final_population[0]}")
-            print(f"DEBUG: first item length = {len(final_population[0]) if hasattr(final_population[0], '__len__') else 'N/A'}")
-        
-        for i in range(min(3, len(final_population))):
-            item = final_population[i]
-            print(f"\nDEBUG: Item {i} = {item}")
-            print(f"DEBUG: Item {i} type = {type(item)}")
-            
-            try:
-                if isinstance(item, (tuple, list)):
-                    seq = item[0]
-                    score = item[1]
-                    print(f"DEBUG: Candidate {i+1} score = {score} (type: {type(score).__name__})")
-                    print(f"DEBUG: Candidate {i+1} sequence length = {len(seq)}")
-                    
-                    diffs = [(j + 1, wild_type_sequence[j], seq[j]) 
-                             for j in range(len(seq)) 
-                             if j < len(wild_type_sequence) and seq[j] != wild_type_sequence[j]]
-                    print(f"DEBUG: Item {i} mutations: {diffs}")
-            except Exception as e:
-                print(f"DEBUG: Item {i} error: {e}")
-        print("="*50 + "\n")
-        # --- DIAGNOSTIC BLOCK END ---
-
         print("Ranking candidates and generating reasoning...")
 
-        # Extract mutations using the proper 1-based to 0-based mapping
-        population_with_mutations = []
-        for seq, score in final_population:
-            mutations = []
-            for pos in targets:
-                idx = pos - 1  # Standard biological alignment
-                if idx < len(seq) and idx < len(wild_type_sequence):
-                    if seq[idx] != wild_type_sequence[idx]:
-                        # Example: D186M instead of S186M
-                        mutations.append(f"{wild_type_sequence[idx]}{pos}{seq[idx]}")
-            population_with_mutations.append((seq, score, mutations))
+        # 4. Convert PSO dict output to ranker tuple format and extract mutations
+        converted_population = []
+        for item in final_population:
+            seq = item['sequence']
+            score = float(item['score'])
+            
+            # Extract mutations by comparing to wild-type
+            mutations = [
+                f"{wild_type_sequence[j]}{j+1}{seq[j]}"
+                for j in range(len(seq))
+                if j < len(wild_type_sequence) 
+                and seq[j] != wild_type_sequence[j]
+            ]
+            
+            converted_population.append((seq, score, mutations))
+
+        population_with_mutations = converted_population
 
         # 5. Rank Top 10
         ranker = Ranker(wt_score, wild_type_sequence=wild_type_sequence)
