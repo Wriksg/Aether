@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AETHER — God_Axis</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   EASY EDIT ZONE — change these values only
+═══════════════════════════════════════════ */
+:root {
+  /* Your product brief — edit this text */
+  --product-brief: "AETHER is a CPU-only enzyme mutation discovery engine. It uses ESM-2 protein language model with a custom GA+PSO hybrid search and Parallel Epistatic Reservoir to discover PETase mutations that degrade PET plastic faster. Independently discovered W159H — later validated in Sun et al. 2024. No GPU. No cloud. 69 seconds on an i3 laptop.";
+
+  /* Contact details — edit these */
+  --your-email: "aether@godaxis.in";
+  --your-website: "godaxis.in";
+  --your-whatsapp: "+91-XXXXXXXXXX";
+  --your-linkedin: "https://linkedin.com/in/wrik-sankar-ghosh";
+
+  /* Your intro — edit this */
+  --your-name: "Wrik Sankar Ghosh";
+  --your-title: "Founder, AETHER · First Year B.Tech CSBS, MSIT Kolkata";
+  --your-intro: "I built AETHER solo from scratch on an i3 laptop with 8GB RAM. First year undergrad. No GPU. The engine independently discovered W159H — a mutation later validated in published literature. I am looking for researchers and labs to be early users.";
+
+  /* Photo — replace src in the img tag below */
+  --photo-placeholder: "WG";
+
+  /* Colors */
+  --green: #00ff88;
+  --dark: #060608;
+  --card: #0d0f11;
+  --border: #1a1f24;
+  --text: #e8eaed;
+  --muted: #6b7280;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── WELCOME MODAL ── */
+#welcome {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.8s ease;
+}
+
+#welcome.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 10vw, 8rem);
+  color: #fff;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-align: center;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.welcome-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+  color: var(--green);
+  letter-spacing: 0.3em;
+  margin-top: 1rem;
+  text-transform: uppercase;
+  animation: blink-sub 1.2s step-end infinite;
+}
+
+.welcome-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: #333;
+  letter-spacing: 0.2em;
+  animation: fade-up 1s ease 1s both;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes blink-sub {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HEADER ── */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 3rem;
+  background: rgba(6,6,8,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--green);
+  letter-spacing: 0.15em;
+  font-weight: 700;
+}
+
+/* ── HAMBURGER NAV ── */
+.hamburger {
+  width: 28px;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.hamburger span {
+  display: block;
+  height: 1.5px;
+  background: var(--text);
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: translateY(9.25px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-9.25px) rotate(-45deg);
+}
+
+.nav-panel {
+  position: fixed;
+  top: 64px;
+  right: 0;
+  width: 240px;
+  background: rgba(13,15,17,0.98);
+  border-left: 0.5px solid var(--border);
+  border-bottom: 0.5px solid var(--border);
+  padding: 1.5rem 0;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+.nav-panel.open {
+  transform: translateX(0);
+}
+
+.nav-panel a {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.9rem 2rem;
+  text-transform: uppercase;
+  transition: color 0.2s, padding-left 0.2s;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.nav-panel a:hover {
+  color: var(--green);
+  padding-left: 2.5rem;
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8rem 3rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 3D parallax canvas */
+#bg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+}
+
+.hero-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--green);
+}
+
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5rem, 14vw, 11rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.hero-typewriter {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  color: var(--green);
+  min-height: 1.6em;
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+}
+
+#cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--green);
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: blink 0.7s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.hero-brief {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--muted);
+  max-width: 540px;
+  margin-bottom: 2.5rem;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  color: var(--green);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #000;
+  background: var(--green);
+  padding: 0.9rem 2rem;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.hero-cta:hover {
+  background: #00cc66;
+  transform: translateY(-2px);
+}
+
+.hero-cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 0.9rem 2rem;
+  text-decoration: none;
+  margin-left: 1rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.hero-cta-ghost:hover {
+  background: rgba(0,255,136,0.08);
+  transform: translateY(-2px);
+}
+
+/* ── SECTIONS ── */
+section {
+  padding: 6rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-label::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--green);
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1;
+  color: #fff;
+  margin-bottom: 3rem;
+}
+
+.divider {
+  width: 100%;
+  height: 0.5px;
+  background: var(--border);
+  margin: 0;
+}
+
+/* ── ABOUT ── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.about-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  padding: 2rem;
+  transition: border-color 0.3s;
+}
+
+.about-card:hover {
+  border-color: rgba(0,255,136,0.3);
+}
+
+.about-card-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.about-card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 0.75rem;
+}
+
+.about-card-text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.discovery-banner {
+  background: #071209;
+  border: 1px solid rgba(0,255,136,0.25);
+  padding: 2rem 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.discovery-mark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  color: var(--green);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.discovery-text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.discovery-text strong {
+  color: var(--text);
+  font-weight: 400;
+}
+
+/* ── PIPELINE ── */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin-bottom: 3rem;
+}
+
+.pipe-step {
+  flex: 1;
+  min-width: 130px;
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  position: relative;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.pipe-step:hover {
+  border-color: rgba(0,255,136,0.4);
+  transform: translateY(-4px);
+  z-index: 1;
+}
+
+.pipe-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--green);
+  font-size: 1rem;
+  z-index: 2;
+  background: var(--dark);
+  padding: 0 2px;
+}
+
+.pipe-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--green);
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5rem;
+}
+
+.pipe-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.05em;
+}
+
+.pipe-desc {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── TEAM ── */
+.team-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  padding: 3rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3rem;
+  align-items: start;
+  transition: border-color 0.3s;
+  max-width: 700px;
+}
+
+.team-card:hover {
+  border-color: rgba(0,255,136,0.3);
+}
+
+.team-photo {
+  width: 120px;
+  height: 120px;
+  background: #0d1a12;
+  border: 1px solid rgba(0,255,136,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--green);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.team-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: #fff;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.team-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--green);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+.team-bio {
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+/* ── CONTACT ── */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.contact-item {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  padding: 1.75rem;
+  transition: border-color 0.3s, transform 0.3s;
+  text-decoration: none;
+  display: block;
+}
+
+.contact-item:hover {
+  border-color: rgba(0,255,136,0.4);
+  transform: translateY(-4px);
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.contact-type {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--green);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.contact-value {
+  font-size: 0.9rem;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.contact-cta-block {
+  background: #071209;
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 2.5rem;
+  text-align: center;
+}
+
+.contact-cta-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 0.75rem;
+}
+
+.contact-cta-sub {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 0.5px solid var(--border);
+  padding: 2rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--green);
+  letter-spacing: 0.15em;
+}
+
+.footer-quote {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  font-style: italic;
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  header { padding: 1rem 1.5rem; }
+  #hero { padding: 7rem 1.5rem 3rem; }
+  section { padding: 4rem 1.5rem; }
+  .about-grid { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .pipeline { flex-direction: column; }
+  .pipe-step:not(:last-child)::after { content: '↓'; right: 50%; top: auto; bottom: -14px; transform: translateX(50%); }
+  .team-card { grid-template-columns: 1fr; }
+  .hero-stats { flex-wrap: wrap; gap: 1.5rem; }
+  .discovery-banner { flex-direction: column; gap: 1rem; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     WELCOME MODAL
+═══════════════════════════════════ -->
+<div id="welcome" onclick="closeWelcome()">
+  <div class="welcome-text">AETHER</div>
+  <div class="welcome-sub">Enzyme Mutation Discovery Engine</div>
+  <div class="welcome-hint">CLICK ANYWHERE TO ENTER</div>
+</div>
+
+<!-- ═══════════════════════════════════
+     HEADER
+═══════════════════════════════════ -->
+<header>
+  <div class="logo">GOD_AXIS</div>
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<nav class="nav-panel" id="nav-panel">
+  <a href="#about" onclick="toggleNav()">About Us</a>
+  <a href="#team" onclick="toggleNav()">Team God_Axis</a>
+  <a href="#contact" onclick="toggleNav()">Contact</a>
+</nav>
+
+<!-- ═══════════════════════════════════
+     HERO — 3D PARALLAX BACKGROUND
+═══════════════════════════════════ -->
+<section id="hero" style="max-width:100%;padding-top:0;">
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">God_Axis · Computational Biology</div>
+
+    <div class="hero-title">AETHER</div>
+
+    <div class="hero-typewriter">
+      <span id="typewriter-text"></span><span id="cursor"></span>
+    </div>
+
+    <p class="hero-brief">
+      <!--=== EDIT YOUR BRIEF INTRO BELOW ===-->
+      A CPU-only enzyme mutation discovery engine. Uses ESM-2 protein language
+      model with a custom GA+PSO hybrid search and Parallel Epistatic Reservoir
+      to discover PETase mutations that degrade PET plastic faster.
+      No GPU. No cloud. 69 seconds on an i3 laptop.
+      <!--=== END OF BRIEF INTRO ===-->
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-val">69s</span>
+        <span class="stat-label">Runtime</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">10</span>
+        <span class="stat-label">Candidates</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">W159H</span>
+        <span class="stat-label">Discovered</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">0</span>
+        <span class="stat-label">GPU needed</span>
+      </div>
+    </div>
+
+    <div>
+      <a href="#contact" class="hero-cta">Request Analysis →</a>
+      <a href="#about" class="hero-cta-ghost">How it works</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════
+     ABOUT
+═══════════════════════════════════ -->
+<section id="about">
+  <div class="section-label reveal">About Us</div>
+  <div class="section-title reveal">Directed Evolution,<br>Explained.</div>
+
+  <div class="discovery-banner reveal">
+    <div class="discovery-mark">W159H</div>
+    <div class="discovery-text">
+      Our engine <strong>independently discovered W159H</strong> as the top PETase
+      mutation candidate — from sequence fitness data alone, with no prior knowledge
+      of published literature. Sun et al. 2024 later validated this mutation as
+      a significant activity-improving variant. That is not luck. That is architecture.
+    </div>
+  </div>
+
+  <div class="about-grid reveal">
+    <div class="about-card">
+      <div class="about-card-label">The Problem</div>
+      <div class="about-card-title">Plastic Won't Wait</div>
+      <div class="about-card-text">
+        Natural PETase degrades PET plastic too slowly for real-world deployment.
+        Finding faster variants means screening millions of mutation combinations —
+        costing months of lab time and significant funding. Most tools require
+        GPU clusters or expensive cloud infrastructure.
+      </div>
+    </div>
+    <div class="about-card">
+      <div class="about-card-label">The Solution</div>
+      <div class="about-card-title">AETHER Engine</div>
+      <div class="about-card-text">
+        <!--=== EDIT DETAILED PRODUCT INTRO BELOW ===-->
+        AETHER runs entirely on consumer hardware. A custom GA+PSO hybrid
+        search engine, initialized by DoWhy causal discovery and guided by
+        ESM-2 protein language model scoring. Every result is physics-validated
+        and blockchain-anchored for permanent reproducibility.
+        <!--=== END ===-->
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline reveal">
+    <div class="pipe-step">
+      <div class="pipe-num">01</div>
+      <div class="pipe-name">DoWhy</div>
+      <div class="pipe-desc">Causal position discovery from DMS data</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">02</div>
+      <div class="pipe-name">GA+PSO</div>
+      <div class="pipe-desc">Hybrid evolutionary swarm search</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">03</div>
+      <div class="pipe-name">PER</div>
+      <div class="pipe-desc">Epistatic reservoir for valley crossing</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">04</div>
+      <div class="pipe-name">ESM-2</div>
+      <div class="pipe-desc">Masked marginal fitness scoring</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">05</div>
+      <div class="pipe-name">Rosetta</div>
+      <div class="pipe-desc">ΔΔG physics validation filter</div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">06</div>
+      <div class="pipe-name">Output</div>
+      <div class="pipe-desc">10 ranked candidates + blockchain proof</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════
+     TEAM
+═══════════════════════════════════ -->
+<section id="team">
+  <div class="section-label reveal">Team God_Axis</div>
+  <div class="section-title reveal">The Builder</div>
+
+  <div class="team-card reveal">
+    <div class="team-photo" id="team-photo">
+      <!--=== REPLACE WITH YOUR PHOTO ===-->
+      <!--=== Option 1: use initials placeholder (default) ===-->
+      WG
+      <!--=== Option 2: uncomment below and add your photo path ===-->
+      <!--<img src="YOUR_PHOTO.jpg" alt="Wrik Sankar Ghosh">-->
+    </div>
+
+    <div>
+      <!--=== EDIT YOUR NAME ===-->
+      <div class="team-name">WRIK SANKAR GHOSH</div>
+      <!--=== EDIT YOUR TITLE ===-->
+      <div class="team-title">Founder, AETHER · First Year B.Tech CSBS · MSIT Kolkata</div>
+      <!--=== EDIT YOUR PERSONAL INTRO ===-->
+      <div class="team-bio">
+        Built AETHER solo from scratch on an Intel i3 laptop with 8GB RAM.
+        No GPU. No co-founder. No cloud. The engine independently discovered W159H —
+        a PETase mutation later validated in published literature — from sequence
+        fitness data alone in 69 seconds. First year undergrad. Looking for
+        researchers and labs to be early users and collaborators.
+      </div>
+      <!--=== END ===-->
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════
+     CONTACT
+═══════════════════════════════════ -->
+<section id="contact">
+  <div class="section-label reveal">Contact</div>
+  <div class="section-title reveal">Work With Us</div>
+
+  <div class="contact-grid reveal">
+    <!--=== EDIT YOUR EMAIL BELOW ===-->
+    <a class="contact-item" href="mailto:aether@godaxis.in">
+      <div class="contact-icon">✉</div>
+      <div class="contact-type">Email</div>
+      <div class="contact-value">aether@godaxis.in</div>
+    </a>
+
+    <!--=== EDIT YOUR WEBSITE BELOW ===-->
+    <a class="contact-item" href="https://godaxis.in" target="_blank">
+      <div class="contact-icon">🌐</div>
+      <div class="contact-type">Website</div>
+      <div class="contact-value">godaxis.in</div>
+    </a>
+
+    <!--=== EDIT YOUR WHATSAPP NUMBER BELOW ===-->
+    <a class="contact-item" href="https://wa.me/91XXXXXXXXXX" target="_blank">
+      <div class="contact-icon">💬</div>
+      <div class="contact-type">WhatsApp</div>
+      <div class="contact-value">+91-XXXXXXXXXX</div>
+    </a>
+
+    <!--=== EDIT YOUR LINKEDIN BELOW ===-->
+    <a class="contact-item" href="https://linkedin.com/in/wrik-sankar-ghosh" target="_blank">
+      <div class="contact-icon">in</div>
+      <div class="contact-type">LinkedIn</div>
+      <div class="contact-value">Wrik Sankar Ghosh</div>
+    </a>
+
+    <!--=== EDIT YOUR GITHUB BELOW ===-->
+    <a class="contact-item" href="https://github.com/Wriksg/Aether" target="_blank">
+      <div class="contact-icon">⌥</div>
+      <div class="contact-type">GitHub</div>
+      <div class="contact-value">Wriksg / Aether</div>
+    </a>
+
+    <a class="contact-item" href="mailto:aether@godaxis.in?subject=AETHER Analysis Request&body=Hi Wrik, I would like to request a PETase mutation analysis. My sequence is:">
+      <div class="contact-icon">→</div>
+      <div class="contact-type">Request Analysis</div>
+      <div class="contact-value">Send your sequence</div>
+    </a>
+  </div>
+
+  <div class="contact-cta-block reveal">
+    <div class="contact-cta-title">Ready to Discover?</div>
+    <div class="contact-cta-sub">
+      Send us your PETase sequence. We return 10 ranked mutation candidates
+      with biological reasoning, Rosetta physics validation, and a permanent
+      blockchain proof — within 24 hours.
+    </div>
+    <a href="mailto:aether@godaxis.in?subject=AETHER Analysis Request&body=Hi Wrik, I would like to request a PETase mutation analysis. My sequence is:" class="hero-cta">
+      Request Analysis — Rs 5,000 →
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FOOTER
+═══════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">GOD_AXIS · AETHER</div>
+  <div class="footer-quote">"The algorithm found W159H. The literature confirmed it later."</div>
+</footer>
+
+<script>
+/* ── WELCOME ── */
+let welcomed = false;
+function closeWelcome() {
+  if (welcomed) return;
+  welcomed = true;
+  document.getElementById('welcome').classList.add('fade-out');
+  setTimeout(() => document.getElementById('welcome').style.display = 'none', 900);
+}
+setTimeout(closeWelcome, 3000);
+
+/* ── NAV ── */
+function toggleNav() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('nav-panel').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const nav = document.getElementById('nav-panel');
+  const ham = document.getElementById('hamburger');
+  if (!nav.contains(e.target) && !ham.contains(e.target)) {
+    nav.classList.remove('open');
+    ham.classList.remove('open');
+  }
+});
+
+/* ── TYPEWRITER ── */
+const lines = [
+  "No GPU. No cloud. No black box.",
+  "69 seconds. 10 candidates. On-chain.",
+  "W159H discovered from sequence alone.",
+  "Directed Evolution, Explained.",
+];
+let li = 0, ci = 0, deleting = false;
+const tw = document.getElementById('typewriter-text');
+function type() {
+  const line = lines[li];
+  if (!deleting) {
+    tw.textContent = line.slice(0, ++ci);
+    if (ci === line.length) { deleting = true; setTimeout(type, 2000); return; }
+    setTimeout(type, 55);
+  } else {
+    tw.textContent = line.slice(0, --ci);
+    if (ci === 0) { deleting = false; li = (li + 1) % lines.length; setTimeout(type, 400); return; }
+    setTimeout(type, 30);
+  }
+}
+setTimeout(type, 3200);
+
+/* ── 3D PARALLAX CANVAS ── */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, mouse = {x: 0, y: 0};
+
+function resize() {
+  W = canvas.width = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+document.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+/* Nodes */
+const NODE_COUNT = 60;
+const nodes = Array.from({length: NODE_COUNT}, () => ({
+  x: Math.random() * 1400,
+  y: Math.random() * 900,
+  z: Math.random() * 2 + 0.5,
+  vx: (Math.random() - 0.5) * 0.15,
+  vy: (Math.random() - 0.5) * 0.15,
+  r: Math.random() * 2 + 1,
+  bright: Math.random() * 0.5 + 0.2
+}));
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const mx = (mouse.x / W - 0.5) * 60;
+  const my = (mouse.y / H - 0.5) * 40;
+
+  nodes.forEach(n => {
+    n.x += n.vx;
+    n.y += n.vy;
+    if (n.x < 0) n.x = W; if (n.x > W) n.x = 0;
+    if (n.y < 0) n.y = H; if (n.y > H) n.y = 0;
+  });
+
+  /* connections */
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j];
+      const px = a.x - mx * a.z, py = a.y - my * a.z;
+      const qx = b.x - mx * b.z, qy = b.y - my * b.z;
+      const dx = px - qx, dy = py - qy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 130) {
+        const alpha = (1 - dist/130) * 0.18 * ((a.z + b.z) / 4);
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(qx, qy);
+        ctx.strokeStyle = `rgba(0,255,136,${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  /* dots */
+  nodes.forEach(n => {
+    const px = n.x - mx * n.z;
+    const py = n.y - my * n.z;
+    const alpha = n.bright * (0.4 + n.z * 0.3);
+    ctx.beginPath();
+    ctx.arc(px, py, n.r * n.z * 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,255,136,${alpha})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── SCROLL REVEAL ── */
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.1});
+reveals.forEach(r => obs.observe(r));
+</script>
+</body>
+</html>
