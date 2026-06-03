@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER | Enzyme Mutation Discovery Engine</title>
+    <!-- Google Fonts for JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Design Tokens */
+        :root {
+            --bg-color: #0a0a0a;
+            --accent-color: #00ff88;
+            --panel-color: #0d0d0d;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Welcome Fullscreen Overlay */
+        #welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-color);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s;
+            padding: 20px;
+        }
+
+        #welcome-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+            animation: pulse-glowing 2s infinite ease-in-out;
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        @keyframes pulse-glowing {
+            0%, 100% { 
+                text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); 
+                color: #ffffff; 
+            }
+            50% { 
+                text-shadow: 0 0 35px rgba(0, 255, 136, 0.85); 
+                color: var(--accent-color); 
+            }
+        }
+
+        /* Navbar & Menu Icon */
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 6%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 0.1em;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            pointer-events: auto;
+            text-transform: uppercase;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            pointer-events: auto;
+            width: 30px;
+            height: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 110;
+        }
+
+        .menu-line {
+            width: 100%;
+            height: 2px;
+            background-color: #ffffff;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+        }
+
+        /* Hamburger Open States */
+        .menu-btn.open .menu-line:nth-child(1) {
+            transform: translateY(11px) rotate(45deg);
+        }
+        .menu-btn.open .menu-line:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-btn.open .menu-line:nth-child(3) {
+            transform: translateY(-11px) rotate(-45deg);
+        }
+
+        /* Navigation Side Panel */
+        #nav-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: var(--bg-color);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 105;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10%;
+            transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #nav-panel.open {
+            right: 0;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .nav-item {
+            font-size: 1.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: #ffffff;
+            transition: color 0.3s, padding-left 0.3s;
+        }
+
+        .nav-item:hover {
+            color: var(--accent-color);
+            padding-left: 10px;
+        }
+
+        /* Full-Page Parallax Viewport */
+        .hero-viewport {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1200px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* 3D Background Layer */
+        .parallax-bg {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background-image: url('logo.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform-style: preserve-3d;
+            transform: translateZ(-30px) scale(1.05);
+            will-change: transform;
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* 3D Content Card Overlay */
+        .parallax-card {
+            position: relative;
+            background-color: rgba(13, 13, 13, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 48px;
+            border-radius: 4px;
+            max-width: 600px;
+            width: 100%;
+            z-index: 10;
+            transform: translateZ(40px);
+            will-change: transform;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.4s, box-shadow 0.4s;
+        }
+
+        .parallax-card:hover {
+            border-color: rgba(0, 255, 136, 0.35);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
+        }
+
+        .card-tag {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            letter-spacing: 0.25em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            animation: bounce 2s infinite;
+            z-index: 15;
+            cursor: pointer;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -10px); }
+            60% { transform: translate(-50%, -5px); }
+        }
+
+        /* Static Informational Sections */
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 6%;
+            display: flex;
+            flex-direction: column;
+            gap: 120px;
+        }
+
+        .static-section {
+            scroll-margin-top: 100px;
+        }
+
+        /* Dark Card Structure */
+        .info-card {
+            background-color: var(--panel-color);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 48px;
+            border-radius: 4px;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .info-card:hover {
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.15);
+        }
+
+        .section-num {
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            font-weight: 700;
+            letter-spacing: 0.2em;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .body-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-weight: 300;
+        }
+
+        .highlight-text {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        /* Team Sub-Layout */
+        .team-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .meta-val {
+            font-size: 0.9rem;
+            color: #ffffff;
+        }
+
+        /* Contact Details & Social Icons */
+        .contact-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 12px;
+        }
+
+        .contact-link {
+            font-size: 1rem;
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            width: fit-content;
+        }
+
+        .contact-link:hover {
+            color: var(--accent-color);
+        }
+
+        .social-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 24px;
+        }
+
+        /* SVG icon style */
+        .svg-icon {
+            fill: currentColor;
+            width: 22px;
+            height: 22px;
+            transition: color 0.3s;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 2rem;
+            }
+            .card-title {
+                font-size: 1.6rem;
+            }
+            .parallax-card {
+                padding: 32px 24px;
+            }
+            .info-card {
+                padding: 32px 24px;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            #nav-panel {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fullscreen Welcome Overlay -->
+    <div id="welcome-overlay">
+        <h1 class="welcome-title">Welcome to AETHER</h1>
+        <p class="welcome-subtitle">Enzyme Mutation Discovery Engine</p>
+    </div>
+
+    <!-- Header & Navigation Bar -->
+    <div class="header-bar">
+        <div class="logo-text">God_Axis</div>
+        <button class="menu-btn" id="menu-toggle" aria-label="Toggle Navigation">
+            <span class="menu-line"></span>
+            <span class="menu-line"></span>
+            <span class="menu-line"></span>
+        </button>
+    </div>
+
+    <!-- Slide-out Navigation Panel -->
+    <nav id="nav-panel">
+        <ul class="nav-list">
+            <li><a href="#about-us" class="nav-item">About Us</a></li>
+            <li><a href="#team" class="nav-item">Team God_Axis</a></li>
+            <li><a href="#contact" class="nav-item">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Full-Page Interactive Parallax Hero Section -->
+    <section class="hero-viewport" id="hero">
+        <div class="parallax-bg" id="parallax-bg"></div>
+        <div class="parallax-card" id="parallax-card">
+            <div class="card-tag">AETHER PLATFORM</div>
+            <h2 class="card-title">Directed Evolution, <br>Explained.</h2>
+            <p class="card-desc">
+                A local search-space compression engine engineered to identify high-confidence mutation candidates. By mapping causal pathways and biophysical coordinates on consumer hardware, we eliminate the need for costly GPU environments and complex cloud dependencies [1].
+            </p>
+        </div>
+        <div class="scroll-indicator" id="scroll-cta">SCROLL_DOWN_TO_VIEW</div>
+    </section>
+
+    <!-- Main Informational Content wrapper -->
+    <div class="section-container">
+
+        <!-- Section 1: About Us -->
+        <section class="static-section" id="about-us">
+            <div class="info-card">
+                <span class="section-num">01 // ABOUT US</span>
+                <h3 class="section-title">Local, High-Trust Biophysical Inference</h3>
+                <p class="body-text">
+                    AETHER is built to bypass the expensive cloud bills and massive compute limitations historically associated with computational biology [1]. Operating entirely as a <span class="highlight-text">CPU-only enzyme mutation discovery engine</span>, it processes complex protein structures on consumer-grade hardware in under <span class="highlight-text">69 seconds</span> [1].
+                </p>
+                <p class="body-text">
+                    The platform's capability is anchored in rigorous molecular verification [1]. AETHER independently discovered the highly effective <span class="highlight-text">W159H mutation</span>, which stabilizes the pocket conformation of PET-degrading enzymes, proving that search-space optimization can be executed successfully without black-box cloud dependencies [1].
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: Team God_Axis -->
+        <section class="static-section" id="team">
+            <div class="info-card">
+                <span class="section-num">02 // TEAM GOD_AXIS</span>
+                <h3 class="section-title">The Architect</h3>
+                <div class="team-meta">
+                    <div>
+                        <span class="meta-label">Founder & Builder:</span>
+                        <span class="meta-val">Wrik Sankar Ghosh</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Credentials:</span>
+                        <span class="meta-val">First Year B.Tech Computer Science & Business Systems (CSBS)</span>
+                    </div>
+                    <div>
+                        <span class="meta-label">Institution:</span>
+                        <span class="meta-val">Meghnad Saha Institute of Technology (MSIT), Kolkata</span>
+                    </div>
+                </div>
+                <p class="body-text">
+                    Wrik designed and engineered the AETHER computational platform from the ground up, implementing the hybrid evolutionary GA-PSO swarm, the causal DoWhy graph loader, and the custom Parallel Epistatic Reservoir logic [1]. His work centers on making biochemical computing more resource-efficient and accessible to independent labs [1].
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 3: Contact -->
+        <section class="static-section" id="contact">
+            <div class="info-card">
+                <span class="section-num">03 // CONTACT</span>
+                <h3 class="section-title">Initiate Collaboration</h3>
+                <p class="body-text">
+                    If your laboratory is actively engineering PET hydrolases, cutinases, or other degradation enzymes, we are available to help prioritize your target sequences [1].
+                </p>
+                <div class="contact-methods">
+                    <a href="mailto:aether@godaxis.in" class="contact-link">
+                        <span class="highlight-text">Email //</span> aether@godaxis.in
+                    </a>
+                    <a href="https://godaxis.in" class="contact-link" target="_blank">
+                        <span class="highlight-text">Domain //</span> godaxis.in
+                    </a>
+                </div>
+                <div class="social-row">
+                    <!-- Custom SVG LinkedIn Link (Zero External Dependencies) -->
+                    <a href="https://www.linkedin.com/in/wrik-sankar-ghosh-13589b2bb" class="contact-link" target="_blank" aria-label="Wrik Sankar Ghosh LinkedIn Profile">
+                        <svg class="svg-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        </svg>
+                        <span>Connect on LinkedIn</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Vanilla Javascript Logic -->
+    <script>
+        // 1. Welcome Screen Lifecycle
+        const welcomeOverlay = document.getElementById('welcome-overlay');
+        const dismissWelcome = () => {
+            if (!welcomeOverlay.classList.contains('fade-out')) {
+                welcomeOverlay.classList.add('fade-out');
+                // Remove from DOM parsing hierarchy once transition finishes
+                setTimeout(() => {
+                    welcomeOverlay.style.display = 'none';
+                }, 1200);
+            }
+        };
+
+        // Automate welcome fadeout after 2.5 seconds, or on click
+        const welcomeTimer = setTimeout(dismissWelcome, 2500);
+        welcomeOverlay.addEventListener('click', () => {
+            clearTimeout(welcomeTimer);
+            dismissWelcome();
+        });
+
+        // 2. Navigation Panel Sliding Logic
+        const menuToggle = document.getElementById('menu-toggle');
+        const navPanel = document.getElementById('nav-panel');
+
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('open');
+            navPanel.classList.toggle('open');
+        });
+
+        // Auto-close side-panel when clicking any navigation anchor
+        const navLinks = document.querySelectorAll('.nav-item');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+
+                // Close Menu states
+                menuToggle.classList.remove('open');
+                navPanel.classList.remove('open');
+
+                // Smooth scroll execution
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Smooth scroll for hero scroll CTA
+        const scrollCta = document.getElementById('scroll-cta');
+        scrollCta.addEventListener('click', () => {
+            const aboutUsSection = document.getElementById('about-us');
+            if (aboutUsSection) {
+                aboutUsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        // 3. Smooth CSS 3D Mouse Parallax Engine
+        const heroSection = document.getElementById('hero');
+        const bgLayer = document.getElementById('parallax-bg');
+        const cardLayer = document.getElementById('parallax-card');
+
+        let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Apply interactive 3D parallax offsets on cursor coordinates (desktop only)
+        if (!isTouchDevice) {
+            window.addEventListener('mousemove', (e) => {
+                // Calculate coordinate offsets relative to center of screen
+                const cx = window.innerWidth / 2;
+                const cy = window.innerHeight / 2;
+
+                const dx = (cx - e.clientX) / cx; // Normalized coordinate: -1.0 to 1.0
+                const dy = (cy - e.clientY) / cy;
+
+                // Restrained angles for structural visual clarity
+                const rotateYAngle = dx * 12;  // Up to 12 degrees
+                const rotateXAngle = -dy * 12; // Up to 12 degrees
+
+                // Apply inverse transformation matrices to establish depth layers
+                bgLayer.style.transform = `rotateY(${rotateYAngle * 0.8}deg) rotateX(${rotateXAngle * 0.8}deg) translateZ(-30px) scale(1.08)`;
+                cardLayer.style.transform = `rotateY(${rotateYAngle * 1.3}deg) rotateX(${rotateXAngle * 1.3}deg) translateZ(40px)`;
+            });
+
+            // Smoothly reset transformations when mouse exits viewport
+            heroSection.addEventListener('mouseleave', () => {
+                bgLayer.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(-30px) scale(1.05)';
+                cardLayer.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(0px)';
+            });
+        }
+    </script>
+</body>
+</html>
